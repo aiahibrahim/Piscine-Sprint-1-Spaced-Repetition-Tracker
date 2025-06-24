@@ -1,8 +1,45 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script type="module" src="script.js"></script>
-  </head>
-  <body>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Bookmarks</title>
+  <script type="module" src="script.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1 id="main-heading">Shared Bookmarks</h1>
+    <h2 id="sub-heading">Save and view helpful bookmarks by user</h2>
+  </header>
+
+  <!-- User Selector -->
+  <label for="user-select">Select a user:</label>
+  <select id="user-select" aria-label="Select user"></select>
+
+  <br><br>
+
+  <!-- Bookmarks Display -->
+  <div id="bookmarks" aria-label="List of bookmarks"></div>
+
+  <br>
+
+  <!-- Bookmark Form -->
+  <h2>Add a new bookmark</h2>
+  <form id="bookmark-form">
+    <label for="url">URL:</label>
+    <input type="url" id="url" required />
+    <br><br>
+
+    <label for="title">Title:</label>
+    <input type="text" id="title" required />
+    <br><br>
+
+    <label for="description">Description:</label>
+    <textarea id="description" required></textarea>
+    <br><br>
+
+    <button type="submit">Add Bookmark</button>
+  </form>
+</body>
 </html>
