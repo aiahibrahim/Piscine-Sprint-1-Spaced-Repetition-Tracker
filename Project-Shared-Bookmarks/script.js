@@ -3,7 +3,8 @@ import { getUserIds, getData, setData, clearData } from "./storage.js";
 // Clear existing data for demo users (optional reset)
 clearData("1");
 clearData("2");
-
+clearData("3");
+clearData("4");
 // Get references to key DOM elements
 const userSelect = document.getElementById("user-select");
 const bookmarksDiv = document.getElementById("bookmarks");
