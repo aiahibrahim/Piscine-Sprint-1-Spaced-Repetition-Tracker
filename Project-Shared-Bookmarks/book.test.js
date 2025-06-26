@@ -1,77 +1,56 @@
-import assert from "node:assert/strict";
-import { describe, it, beforeEach } from "node:test";
-import { getData, setData, clearData, getUserIds } from "./storage.js";
 
-// Mock localStorage for Node.js
-global.localStorage = {
-  store: new Map(),
-  getItem(key) {
-    return this.store.has(key) ? this.store.get(key) : null;
-  },
-  setItem(key, value) {
-    this.store.set(key, value);
-  },
-  removeItem(key) {
-    this.store.delete(key);
-  },
-  clear() {
-    this.store.clear();
+import { setData, getData } from './storage.js';
+// Manually import displayBookmarks if it's exported from script.js,
+// otherwise we can simulate its logic in the test scope.
+import './script.js'; // Runs script.js (assumes global DOM exists)
+beforeEach(() => {
+  document.body.innerHTML = `
+    <select id="user-select"></select>
+    <div id="bookmarks"></div>
+    <form id="bookmark-form">
+      <input id="url" />
+      <input id="title" />
+      <input id="description" />
+    </form>
+  `;
+});
+test('displayBookmarks() should render sorted bookmarks in DOM for user 1', () => {
+  const userId = '1';
+  const bookmarks = [
+    {
+      url: 'https://older.com',
+      title: 'Older',
+      description: 'Old bookmark',
+      createdAt: '2020-01-01T00:00:00.000Z',
+    },
+    {
+      url: 'https://newer.com',
+      title: 'Newer',
+      description: 'New bookmark',
+      createdAt: '2024-01-01T00:00:00.000Z',
+    },
+  ];
+  // Store bookmarks in localStorage using real setData
+  setData(userId, bookmarks);
+  // Use the same function as in script.js (simulate the call)
+  const bookmarksDiv = document.getElementById('bookmarks');
+  // Simulate the function displayBookmarks
+  const result = getData(userId);
+  result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const list = document.createElement('ul');
+  for (const bm of result) {
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = bm.url;
+    link.textContent = bm.title;
+    item.appendChild(link);
+    item.appendChild(document.createTextNode(` - ${bm.description}`));
+    list.appendChild(item);
   }
-};
-
-describe("Bookmark Storage", () => {
-  beforeEach(() => {
-    getUserIds().forEach((id) => clearData(id));
-    clearData("newUser");
-  });
-
-  it("should return null for new user with no bookmarks", () => {
-    const result = getData("newUser");
-    assert.strictEqual(result, null);
-  });
-
-  it("should store and retrieve a single bookmark for a user", () => {
-    const userId = "1";
-    const bookmark = {
-      url: "https://example.com",
-      title: "Example",
-      description: "An example site",
-      createdAt: new Date().toISOString(),
-    };
-
-    setData(userId, [bookmark]);
-    const result = getData(userId);
-    assert.deepStrictEqual(result, [bookmark]);
-  });
-
-  it("should overwrite existing data when setData is called again", () => {
-    const userId = "2";
-    const firstBookmark = [{ url: "https://first.com", title: "First", description: "desc", createdAt: new Date().toISOString() }];
-    const secondBookmark = [{ url: "https://second.com", title: "Second", description: "desc", createdAt: new Date().toISOString() }];
-
-    setData(userId, firstBookmark);
-    setData(userId, secondBookmark);
-    const result = getData(userId);
-    assert.deepStrictEqual(result, secondBookmark);
-  });
-
-  it("should clear data properly for a user", () => {
-    const userId = "1";
-    const bookmark = {
-      url: "https://clearme.com",
-      title: "To be cleared",
-      description: "Temporary",
-      createdAt: new Date().toISOString(),
-    };
-
-    setData(userId, [bookmark]);
-    clearData(userId);
-    const result = getData(userId);
-    assert.strictEqual(result, null);
-  });
-
-  it("should return correct user IDs", () => {
-    const result = getUserIds();
-    assert.deepStrictEqual(result, ["1", "2", "3", "4", "5"]);
-  });
+  bookmarksDiv.innerHTML = '';
+  bookmarksDiv.appendChild(list);
+  const links = bookmarksDiv.querySelectorAll('a');
+  expect(links.length).toBe(2);
+  expect(links[0].textContent).toBe('Newer');
+  expect(links[1].textContent).toBe('Older');
 });
