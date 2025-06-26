@@ -1,12 +1,120 @@
-// This is a placeholder file which shows how you can access functions defined in other files.
-// It can be loaded into index.html.
-// You can delete the contents of the file once you have understood how it works.
-// Note that when running locally, in order to open a web page which uses modules, you must serve the directory over HTTP e.g. with https://www.npmjs.com/package/http-server
-// You can't open the index.html file using a file:// URL.
+import { getUserIds, getData, setData } from "./storage.js";
 
-import { getUserIds } from "./storage.js";
+// Get references to key DOM elements
+const userSelect = document.getElementById("user-select");
+const bookmarksDiv = document.getElementById("bookmarks");
+const form = document.getElementById("bookmark-form");
 
-window.onload = function () {
-  const users = getUserIds();
-  document.querySelector("body").innerText = `There are ${users.length} users`;
+let currentUser = null;
+
+// Initialize on window load
+window.onload = () => {
+  loadUsers();
+  userSelect.addEventListener("change", handleUserChange);
+  form.addEventListener("submit", handleFormSubmit);
 };
+
+// Load users into dropdown
+function loadUsers() {
+  const users = getUserIds();
+  userSelect.innerHTML = `<option value="">-- Select a user --</option>`;
+  for (const id of users) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = `User ${id}`;
+    userSelect.appendChild(option);
+  }
+}
+
+// Handle user selection change
+function handleUserChange() {
+  currentUser = userSelect.value;
+  if (currentUser) {
+    showBookmarks(currentUser);
+  } else {
+    bookmarksDiv.textContent = "";
+  }
+}
+
+// Display bookmarks for the selected user
+function showBookmarks(userId) {
+  const bookmarks = getData(userId) || [];
+
+  if (bookmarks.length === 0) {
+    bookmarksDiv.textContent = "No bookmarks found for this user.";
+    return;
+  }
+
+  // Sort bookmarks by newest first
+  bookmarks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const list = document.createElement("ul");
+
+  for (const bm of bookmarks) {
+    const item = document.createElement("li");
+
+    // Title as clickable link
+    const link = document.createElement("a");
+    link.href = bm.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = bm.title;
+    link.setAttribute("aria-label", `Bookmark titled ${bm.title}`);
+    item.appendChild(link);
+
+    // Description next to title
+    item.appendChild(document.createTextNode(` - ${bm.description}`));
+
+    // Timestamp
+    const timestamp = document.createElement("small");
+    timestamp.textContent = new Date(bm.createdAt).toLocaleString();
+    const timestampWrapper = document.createElement("div");
+    timestampWrapper.appendChild(timestamp);
+    item.appendChild(timestampWrapper);
+
+    list.appendChild(item);
+  }
+
+  // Replace old content
+  bookmarksDiv.innerHTML = "";
+  bookmarksDiv.appendChild(list);
+}
+
+// Handle form submission to add a new bookmark
+function handleFormSubmit(event) {
+  event.preventDefault();
+
+  if (!currentUser) {
+    alert("Please select a user first.");
+    return;
+  }
+
+  // Get form values
+  const url = document.getElementById("url").value.trim();
+  const title = document.getElementById("title").value.trim();
+  const description = document.getElementById("description").value.trim();
+
+  if (!url || !title || !description) return;
+
+   // URL format validation
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    alert("Please enter a valid URL that starts with http:// or https://");
+    return;
+  }
+  
+  const newBookmark = {
+    url,
+    title,
+    description,
+    createdAt: new Date().toISOString(),
+  };
+
+  const userBookmarks = getData(currentUser) || [];
+  userBookmarks.push(newBookmark);
+  setData(currentUser, userBookmarks);
+
+  form.reset();
+  showBookmarks(currentUser);
+}
+
+
