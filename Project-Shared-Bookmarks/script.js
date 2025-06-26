@@ -1,10 +1,5 @@
-import { getUserIds, getData, setData, clearData } from "./storage.js";
+import { getUserIds, getData, setData } from "./storage.js";
 
-// Clear existing data for demo users (optional reset)
-clearData("1");
-clearData("2");
-clearData("3");
-clearData("4");
 // Get references to key DOM elements
 const userSelect = document.getElementById("user-select");
 const bookmarksDiv = document.getElementById("bookmarks");
@@ -101,6 +96,12 @@ function handleFormSubmit(event) {
 
   if (!url || !title || !description) return;
 
+   // URL format validation
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    alert("Please enter a valid URL that starts with http:// or https://");
+    return;
+  }
+  
   const newBookmark = {
     url,
     title,
@@ -115,3 +116,5 @@ function handleFormSubmit(event) {
   form.reset();
   showBookmarks(currentUser);
 }
+
+
